@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EventSphere — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<header class="es-header">
+  <div class="logo"><span class="dot"></span>EventSphere</div>
+  <nav>
+    <a class="nav-link" href="index.html#events">Events</a>
+    <a class="nav-link" href="index.html#how">How it works</a>
+    <a class="btn ghost" id="userNavBtn" href="user-management.html">User</a>
+    <a class="btn ghost" id="myBookingsNavBtn" href="my-bookings.html">My Bookings</a>
+    <a class="btn ghost" id="loginNavBtn" href="login.html">Login</a>
+  </nav>
+</header>
+<main class="es-page-main">
+  <section class="shared-card">
+    <div class="eyebrow">Admin</div>
+    <h1>Opening Event Management…</h1>
+    <p style="margin-top:10px;color:var(--grey);">Event create and edit are now handled directly on the home page.</p>
+  </section>
+</main>
+<script src="shared.js"></script>
+<script>
+  if (String(localStorage.getItem('es_user_role') || '').toUpperCase() !== 'ADMIN') {
+    window.location.href = 'login.html';
+  } else {
+    window.location.replace('index.html#events');
+  }
+</script>
+</body>
+</html>

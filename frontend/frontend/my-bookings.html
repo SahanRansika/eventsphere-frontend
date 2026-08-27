@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EventSphere — My Bookings</title>
+<style>
+:root{--ink:#0a0a0a;--paper:#fff;--bg:#f4f4f2;--muted:#6f6f6f;--line:#d8d8d5;--danger:#b42318;--ok:#027a48}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:var(--ink);color:#fff;padding:20px 5%;display:flex;justify-content:space-between;align-items:center;gap:20px}header a{color:#fff;text-decoration:none;margin-left:18px}.logo{font-weight:800;font-size:1.25rem}.dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:#fff;margin-right:8px}
+main{max-width:1100px;margin:35px auto;padding:0 20px}.top{display:flex;justify-content:space-between;align-items:end;gap:20px;flex-wrap:wrap}.muted{color:var(--muted)}.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:20px;margin-top:20px}.booking{border:1px solid var(--line);padding:18px;border-radius:10px;margin-bottom:14px}.booking:last-child{margin-bottom:0}.row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:15px 0}.label{font-size:.75rem;color:var(--muted);text-transform:uppercase;font-weight:700}.value{margin-top:4px}.btn{border:0;border-radius:8px;padding:10px 14px;cursor:pointer;font-weight:700;background:var(--ink);color:#fff;text-decoration:none;display:inline-block}.btn.danger{background:var(--danger)}.btn:disabled{opacity:.5;cursor:not-allowed}.status{padding:12px;border-radius:8px;background:#eef2f6;margin-top:20px}.status.error{background:#fef3f2;color:var(--danger)}.status.ok{background:#ecfdf3;color:var(--ok)}
+@media(max-width:750px){.row{grid-template-columns:1fr 1fr}header{align-items:flex-start;flex-direction:column}header a{margin-left:0}}
+</style><link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<header class="es-header">
+  <div class="logo"><span class="dot"></span>EventSphere</div>
+  <nav>
+    <a class="nav-link" href="index.html#events">Events</a>
+    <a class="nav-link" href="index.html#how">How it works</a>
+    <a class="btn ghost" id="userNavBtn" href="user-management.html" style="display:none;">User</a>
+    <a class="btn ghost" id="myBookingsNavBtn" href="my-bookings.html" style="display:none;">My Bookings</a>
+    <a class="btn ghost" id="loginNavBtn" href="login.html">Login</a>
+  </nav>
+</header>
+<main><div class="top"><div><h1>My Bookings</h1><p class="muted">View and manage your EventSphere reservations.</p></div><a class="btn" href="index.html">Browse Events</a></div><div id="status" class="status">Loading bookings…</div><section id="bookings" class="card"></section></main>
+<script>
+const API=window.EVENTSPHERE_API_BASE_URL||(window.location.protocol === 'file:' ? 'http://localhost:8080/api' : '/api');
+const token=localStorage.getItem('es_token');
+const statusEl=document.getElementById('status');
+const bookingsEl=document.getElementById('bookings');
+function setStatus(message,error=false){statusEl.textContent=message;statusEl.className='status '+(error?'error':'ok')}
+function esc(v){const d=document.createElement('div');d.textContent=v??'';return d.innerHTML}
+function date(v){if(!v)return '-';return new Date(v+'T00:00:00').toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'})}
+function time(v){if(!v)return '-';return new Date('1970-01-01T'+v).toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'})}
+async function api(url,options={}){const res=await fetch(API+url,{...options,headers:{Authorization:`Bearer ${token}`,...(options.headers||{})}});const data=await res.json().catch(()=>({}));if(!res.ok||data.success===false)throw new Error(data.message||`Request failed (${res.status})`);return data.data??data}
+async function load(){if(!token){window.location.href='login.html?redirect=my-bookings.html';return}try{const list=await api('/bookings/my-bookings');if(!Array.isArray(list)||list.length===0){bookingsEl.innerHTML='<p class="muted">You have no bookings yet.</p>';setStatus('No bookings found.');return}bookingsEl.innerHTML=list.map(b=>`<article class="booking"><h2>${esc(b.eventTitle||'Event')}</h2><div class="row"><div><div class="label">Reference</div><div class="value">${esc(b.bookingReference||b.id)}</div></div><div><div class="label">Date & Time</div><div class="value">${date(b.eventDate)} · ${time(b.eventTime)}</div></div><div><div class="label">Venue</div><div class="value">${esc(b.eventVenue||'-')}</div></div><div><div class="label">Tickets / Total</div><div class="value">${b.ticketCount} · $${Number(b.totalPrice||0).toFixed(2)}</div></div></div><div><strong>Status:</strong> ${esc(b.status||'UNKNOWN')}</div>${String(b.status).toUpperCase()!=='CANCELLED'?`<button class="btn danger" data-id="${esc(b.id)}" style="margin-top:14px">Cancel Booking</button>`:''}</article>`).join('');bookingsEl.querySelectorAll('[data-id]').forEach(btn=>btn.addEventListener('click',()=>cancel(btn)));setStatus(`${list.length} booking(s) loaded.`)}catch(e){setStatus(e.message,true);bookingsEl.innerHTML='<p>Unable to load your bookings.</p>'}}
+async function cancel(btn){if(!confirm('Cancel this booking?'))return;btn.disabled=true;btn.textContent='Cancelling…';try{await api('/bookings/'+encodeURIComponent(btn.dataset.id)+'/cancel',{method:'PUT'});await load()}catch(e){setStatus(e.message,true);btn.disabled=false;btn.textContent='Cancel Booking'}}
+load();
+</script><script src="shared.js"></script>
+</body></html>

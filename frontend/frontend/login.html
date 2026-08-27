@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EventSphere — Login or Create Account</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --ink:#0a0a0a;
+      --paper:#ffffff;
+      --paper-dim:#f4f4f2;
+      --grey:#6f6f6f;
+      --grey-light:#d8d8d5;
+      --error:#0a0a0a;
+      --radius:2px;
+    }
+    *{ box-sizing:border-box; margin:0; padding:0; }
+    body{
+      font-family:'Inter', sans-serif;
+      color:var(--ink);
+      background:var(--paper-dim);
+      min-height:100vh;
+      display:flex;
+      -webkit-font-smoothing:antialiased;
+    }
+    a{ color:inherit; }
+
+    .brand-panel{
+      flex:1 1 42%;
+      background:var(--ink);
+      color:var(--paper);
+      display:flex; flex-direction:column; justify-content:space-between;
+      padding:48px 52px;
+      position:relative;
+      overflow:hidden;
+    }
+    .brand-panel .logo{
+      font-family:'Archivo Black', sans-serif;
+      font-size:1.4rem; display:flex; align-items:center; gap:10px;
+      position:relative; z-index:2;
+    }
+    .brand-panel .logo .dot{ width:10px; height:10px; background:var(--paper); border-radius:50%; }
+    .brand-copy{ position:relative; z-index:2; max-width:420px; }
+    .brand-copy .eyebrow{
+      font-family:'Space Mono', monospace; letter-spacing:.18em; text-transform:uppercase;
+      font-size:.72rem; color:#b9b9b9; margin-bottom:16px;
+    }
+    .brand-copy h1{
+      font-family:'Archivo Black', sans-serif;
+      font-size:clamp(1.9rem, 3vw, 2.6rem); line-height:1.08; margin-bottom:16px;
+    }
+    .brand-copy p{ color:#cfcfcf; line-height:1.6; font-size:.98rem; }
+    .stub-row{ display:flex; gap:10px; position:relative; z-index:2; }
+    .stub{
+      border:1.5px dashed rgba(255,255,255,0.35);
+      border-radius:3px; padding:10px 14px;
+      font-family:'Space Mono', monospace; font-size:.68rem; color:#b9b9b9;
+    }
+
+    /* decorative ticket outlines */
+    .brand-panel .deco{
+      position:absolute; border:1px solid rgba(255,255,255,0.08); border-radius:6px;
+    }
+    .brand-panel .deco.d1{ width:260px; height:110px; top:-40px; right:-60px; transform:rotate(18deg); }
+    .brand-panel .deco.d2{ width:180px; height:80px; bottom:60px; right:-30px; transform:rotate(-12deg); }
+
+    .form-panel{
+      flex:1 1 58%;
+      background:var(--paper);
+      display:flex; align-items:center; justify-content:center;
+      padding:40px 8vw;
+    }
+    .form-card{ width:100%; max-width:420px; }
+    .form-card .eyebrow{
+      font-family:'Space Mono', monospace; letter-spacing:.14em; text-transform:uppercase;
+      font-size:.72rem; color:var(--grey); margin-bottom:10px;
+    }
+    .form-card h2{
+      font-family:'Archivo Black', sans-serif; font-size:1.9rem; margin-bottom:8px; letter-spacing:-.01em;
+    }
+    .form-card .subtext{ color:var(--grey); font-size:.92rem; margin-bottom:30px; }
+    .form-card .subtext a{ font-weight:700; text-decoration:underline; cursor:pointer; }
+
+    .field{ margin-bottom:18px; }
+    .field label{
+      display:block; font-size:.82rem; font-weight:600; margin-bottom:7px;
+    }
+    .field input{
+      width:100%; padding:12px 14px;
+      border:2px solid var(--ink); border-radius:var(--radius);
+      font-family:'Inter', sans-serif; font-size:.95rem;
+      background:var(--paper);
+    }
+    .field input:focus{ outline:2px solid var(--ink); outline-offset:2px; }
+    .field-hint{ font-size:.76rem; color:var(--grey); margin-top:6px; }
+
+    .btn-submit{
+      width:100%; padding:13px; margin-top:6px;
+      background:var(--ink); color:var(--paper);
+      border:2px solid var(--ink); border-radius:var(--radius);
+      font-family:'Inter', sans-serif; font-weight:700; font-size:.95rem;
+      cursor:pointer; transition:transform .15s ease, opacity .2s ease;
+    }
+    .btn-submit:hover{ transform:translateY(-2px); }
+    .btn-submit:disabled{ opacity:.5; cursor:not-allowed; transform:none; }
+
+    .divider{ display:flex; align-items:center; gap:12px; margin:24px 0; color:var(--grey-light); }
+    .divider::before, .divider::after{ content:""; flex:1; height:1px; background:var(--grey-light); }
+    .divider span{ font-family:'Space Mono', monospace; font-size:.68rem; color:var(--grey); text-transform:uppercase; letter-spacing:.08em; }
+
+    .alert{
+      padding:12px 14px; border-radius:var(--radius); font-size:.85rem;
+      margin-bottom:18px; display:none; border:2px solid var(--ink);
+    }
+    .alert.show{ display:block; }
+    .alert.error{ background:var(--paper-dim); }
+    .alert.success{ background:var(--ink); color:var(--paper); }
+
+    .back-home{
+      display:inline-block; margin-bottom:26px; font-size:.85rem; color:var(--grey);
+      font-family:'Space Mono', monospace;
+    }
+    .back-home:hover{ color:var(--ink); }
+
+    .demo-note{
+      margin-top:26px; padding:14px; border:1.5px dashed var(--grey-light); border-radius:var(--radius);
+      font-size:.78rem; color:var(--grey); font-family:'Space Mono', monospace; line-height:1.5;
+    }
+
+    @media (max-width: 900px){
+      body{ flex-direction:column; }
+      .brand-panel{ padding:32px; }
+      .form-panel{ padding:40px 6vw 60px; }
+    }
+  
+    /* Shared EventSphere header/layout */
+    body{display:block;background:var(--paper-dim);min-height:100vh}
+    .login-layout{
+      min-height:calc(100vh - 73px);
+      display:flex;
+    }
+    @media(max-width:800px){
+      .login-layout{flex-direction:column}
+    }
+
+  </style>
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<header class="es-header">
+  <div class="logo"><span class="dot"></span>EventSphere</div>
+  <nav>
+    <a class="nav-link" href="index.html#events">Events</a>
+    <a class="nav-link" href="index.html#how">How it works</a>
+    <a class="btn ghost" id="userNavBtn" href="user-management.html" style="display:none;">User</a>
+    <a class="btn ghost" id="myBookingsNavBtn" href="my-bookings.html" style="display:none;">My Bookings</a>
+    <a class="btn ghost" id="loginNavBtn" href="login.html">Login</a>
+  </nav>
+</header>
+<div class="login-layout">
+
+<div class="brand-panel">
+  <div class="deco d1"></div>
+  <div class="deco d2"></div>
+  <div class="logo"><span class="dot"></span>EventSphere</div>
+  <div class="brand-copy">
+    <div class="eyebrow">Member Access</div>
+    <h1>Your seat is<br>waiting.</h1>
+    <p>Sign in to manage your bookings, or create a free account to start reserving tickets to concerts, conferences, comedy nights and more.</p>
+  </div>
+  <div class="stub-row">
+    <div class="stub">NO BOOKING FEES</div>
+    <div class="stub">INSTANT CONFIRMATION</div>
+  </div>
+</div>
+
+<div class="form-panel">
+  <div class="form-card">
+    <a href="index.html" class="back-home">← Back to events</a>
+
+    <div id="alertBox" class="alert"></div>
+
+    <!-- ============== LOGIN FORM (shown by default) ============== -->
+    <div id="loginForm">
+      <div class="eyebrow">Welcome back</div>
+      <h2>Log in</h2>
+      <p class="subtext">New to EventSphere? <a href="#register" id="showRegisterLink">Create an account</a></p>
+
+      <form id="loginFormEl" novalidate>
+        <div class="field">
+          <label for="loginEmail">Email address</label>
+          <input type="email" id="loginEmail" autocomplete="username" required placeholder="you@example.com">
+        </div>
+        <div class="field">
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" autocomplete="current-password" required placeholder="••••••••">
+        </div>
+        <button type="submit" class="btn-submit" id="loginSubmitBtn">Log in</button>
+      </form>
+
+      <div class="demo-note">
+        Demo admin account — email: admin@eventsphere.com · password: Admin@123
+      </div>
+    </div>
+
+    <!-- ============== REGISTER FORM (hidden by default) ============== -->
+    <div id="registerForm" style="display:none;">
+      <div class="eyebrow">Join EventSphere</div>
+      <h2>Create an account</h2>
+      <p class="subtext">Already registered? <a href="#login" id="showLoginLink">Log in instead</a></p>
+
+      <form id="registerFormEl" novalidate>
+        <div class="field">
+          <label for="regFullName">Full name</label>
+          <input type="text" id="regFullName" required placeholder="Jane Doe">
+        </div>
+        <div class="field">
+          <label for="regEmail">Email address</label>
+          <input type="email" id="regEmail" autocomplete="username" required placeholder="you@example.com">
+        </div>
+        <div class="field">
+          <label for="regPhone">Phone number</label>
+          <input type="tel" id="regPhone" required placeholder="07X XXX XXXX">
+        </div>
+        <div class="field">
+          <label for="regPassword">Password</label>
+          <input type="password" id="regPassword" autocomplete="new-password" required placeholder="At least 6 characters">
+          <div class="field-hint">Minimum 6 characters.</div>
+        </div>
+        <button type="submit" class="btn-submit" id="registerSubmitBtn">Create account</button>
+      </form>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // =========================================================
+  // CONFIG
+  // =========================================================
+  const API_BASE_URL = window.EVENTSPHERE_API_BASE_URL || (window.location.protocol === 'file:' ? 'http://localhost:8080/api' : '/api');
+
+  // =========================================================
+  // Toggle between Login and Register forms (pure JS, no page reload)
+  // =========================================================
+  const loginForm = document.getElementById('loginForm');
+  const registerForm = document.getElementById('registerForm');
+  const showRegisterLink = document.getElementById('showRegisterLink');
+  const showLoginLink = document.getElementById('showLoginLink');
+  const alertBox = document.getElementById('alertBox');
+
+  function showRegister() {
+    loginForm.style.display = 'none';
+    registerForm.style.display = 'block';
+    hideAlert();
+    history.replaceState(null, '', '#register');
+  }
+
+  function showLogin() {
+    registerForm.style.display = 'none';
+    loginForm.style.display = 'block';
+    hideAlert();
+    history.replaceState(null, '', '#login');
+  }
+
+  showRegisterLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    showRegister();
+  });
+
+  showLoginLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    showLogin();
+  });
+
+  function showAlert(message, type = 'error') {
+    alertBox.textContent = message;
+    alertBox.className = `alert show ${type}`;
+  }
+  function hideAlert() {
+    alertBox.className = 'alert';
+  }
+
+  // If a booking redirected us here, remember where to return to after login.
+  const params = new URLSearchParams(window.location.search);
+  const redirectTo = params.get('redirect');
+
+  // =========================================================
+  // Initial form state
+  // IMPORTANT: do not auto-redirect logged-in users here.
+  // Otherwise clicking "Create an account" while a stale token
+  // exists immediately sends the user back to index.html.
+  // =========================================================
+  if (window.location.hash.toLowerCase() === '#register') {
+    showRegister();
+  } else {
+    showLogin();
+  }
+
+  // =========================================================
+  // LOGIN submit handler
+  // =========================================================
+  document.getElementById('loginFormEl').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideAlert();
+
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const btn = document.getElementById('loginSubmitBtn');
+
+    btn.disabled = true;
+    btn.textContent = 'Logging in…';
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const json = await res.json();
+
+      if (!res.ok || !json.success) {
+        throw new Error(json.message || 'Login failed');
+      }
+
+      persistSession(json.data);
+      showAlert('Login successful. Redirecting…', 'success');
+      setTimeout(() => { window.location.href = redirectTo || 'index.html'; }, 500);
+
+    } catch (err) {
+      showAlert(err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Log in';
+    }
+  });
+
+  // =========================================================
+  // REGISTER submit handler
+  // =========================================================
+  document.getElementById('registerFormEl').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideAlert();
+
+    const fullName = document.getElementById('regFullName').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const phone = document.getElementById('regPhone').value.trim();
+    const password = document.getElementById('regPassword').value;
+    const btn = document.getElementById('registerSubmitBtn');
+
+    if (password.length < 6) {
+      showAlert('Password must be at least 6 characters.');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Creating account…';
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fullName, email, phone, password })
+      });
+      const json = await res.json();
+
+      if (!res.ok || !json.success) {
+        throw new Error(json.message || 'Registration failed');
+      }
+
+      persistSession(json.data);
+      showAlert('Account created. Redirecting…', 'success');
+      setTimeout(() => { window.location.href = redirectTo || 'index.html'; }, 500);
+
+    } catch (err) {
+      showAlert(err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Create account';
+    }
+  });
+
+  function persistSession(data) {
+    localStorage.setItem('es_token', data.token);
+    localStorage.setItem('es_user_id', data.userId);
+    localStorage.setItem('es_user_name', data.fullName);
+    localStorage.setItem('es_user_email', data.email);
+    localStorage.setItem('es_user_role', data.role);
+  }
+</script>
+</div>
+<script src="shared.js"></script>
+</body>
+</html>
